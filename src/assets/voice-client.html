@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Voice SDK Client</title>
+    <link rel="icon" type="image/png" href="twilio.png">
+
+    <!-- Twilio Paste Theme via CDN -->
+    <link rel="stylesheet" href="https://assets.twilio.com/public_assets/paste-fonts/main/1.5.0/fonts.css" />
+
+    <style>
+        /* Twilio Paste Design Tokens */
+        :root {
+            --twilio-red: #F22F46;
+            --twilio-red-dark: #D61F1F;
+            --twilio-blue: #0263E0;
+            --twilio-blue-dark: #0D122B;
+            --color-background: #F4F4F6;
+            --color-background-body: #FFFFFF;
+            --color-text: #121C2D;
+            --color-text-weak: #606B85;
+            --color-border: #8891AA;
+            --color-border-lighter: #C7CBD6;
+            --space-10: 0.25rem;
+            --space-20: 0.5rem;
+            --space-30: 0.75rem;
+            --space-40: 1rem;
+            --space-50: 1.25rem;
+            --space-60: 1.5rem;
+            --space-80: 2rem;
+            --space-100: 2.5rem;
+            --font-size-20: 0.875rem;
+            --font-size-30: 1rem;
+            --font-size-40: 1.125rem;
+            --font-size-60: 1.5rem;
+            --font-size-80: 2rem;
+            --line-height-20: 1.25rem;
+            --line-height-30: 1.5rem;
+            --line-height-60: 2rem;
+            --border-radius: 4px;
+            --border-radius-20: 8px;
+            --box-shadow: 0 1px 3px 0 rgba(18, 28, 45, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--color-background);
+            color: var(--color-text);
+            font-size: var(--font-size-30);
+            line-height: var(--line-height-30);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-40);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .card {
+            background: var(--color-background-body);
+            border-radius: var(--border-radius-20);
+            box-shadow: var(--box-shadow);
+            padding: var(--space-80);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-80);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--space-40);
+            display: block;
+        }
+
+        .title {
+            font-size: var(--font-size-60);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-20);
+        }
+
+        .subtitle {
+            font-size: var(--font-size-20);
+            color: var(--color-text-weak);
+        }
+
+        .status-container {
+            background: var(--color-background);
+            border-radius: var(--border-radius);
+            padding: var(--space-50);
+            margin-bottom: var(--space-60);
+            text-align: center;
+        }
+
+        .destination-container {
+            background: var(--color-background);
+            border-radius: var(--border-radius);
+            padding: var(--space-40);
+            margin-bottom: var(--space-40);
+            text-align: center;
+        }
+
+        .destination-label {
+            font-size: 0.75rem;
+            color: var(--color-text-weak);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-10);
+        }
+
+        .destination-value {
+            font-size: var(--font-size-20);
+            font-weight: 500;
+            color: var(--color-text);
+            word-break: break-all;
+        }
+
+        .status-label {
+            font-size: var(--font-size-20);
+            color: var(--color-text-weak);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-20);
+        }
+
+        .status-value {
+            font-size: var(--font-size-40);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .status-value.connecting {
+            color: var(--twilio-blue);
+        }
+
+        .status-value.connected {
+            color: #14B053;
+        }
+
+        .status-value.error {
+            color: var(--twilio-red);
+        }
+
+        .timer {
+            font-size: var(--font-size-80);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--color-text);
+            text-align: center;
+            margin: var(--space-60) 0;
+            min-height: 3rem;
+        }
+
+        .button {
+            width: 100%;
+            padding: var(--space-50) var(--space-60);
+            font-size: var(--font-size-40);
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-30);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-primary {
+            background: var(--twilio-blue);
+            color: white;
+        }
+
+        .button-primary:hover:not(:disabled) {
+            background: #0D4FC2;
+        }
+
+        .button-primary:active:not(:disabled) {
+            background: #0A3F9F;
+        }
+
+        .button-destructive {
+            background: var(--twilio-red);
+            color: white;
+            margin-top: var(--space-40);
+        }
+
+        .button-destructive:hover:not(:disabled) {
+            background: var(--twilio-red-dark);
+        }
+
+        .button-destructive:active:not(:disabled) {
+            background: #B21717;
+        }
+
+        .button-secondary {
+            background: var(--color-background);
+            color: var(--color-text);
+            border: 2px solid var(--color-border);
+            margin-top: var(--space-40);
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: var(--color-border-lighter);
+        }
+
+        .button-secondary:active:not(:disabled) {
+            background: var(--color-border);
+        }
+
+        .button-secondary.muted {
+            background: var(--twilio-red);
+            color: white;
+            border-color: var(--twilio-red);
+        }
+
+        .button-secondary.muted:hover:not(:disabled) {
+            background: var(--twilio-red-dark);
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--space-40);
+            margin-top: var(--space-40);
+        }
+
+        .button-group .button {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        .error-message {
+            background: #FEE;
+            border: 1px solid var(--twilio-red);
+            color: var(--twilio-red-dark);
+            padding: var(--space-40);
+            border-radius: var(--border-radius);
+            margin-top: var(--space-60);
+            font-size: var(--font-size-20);
+            line-height: var(--line-height-20);
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Instructions Section */
+        .instructions-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-80) var(--space-40);
+            background: var(--color-background-body);
+        }
+
+        .instructions-container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .instructions-card {
+            background: var(--color-background);
+            border-radius: var(--border-radius-20);
+            box-shadow: var(--box-shadow);
+            padding: var(--space-80);
+        }
+
+        .instructions-title {
+            font-size: var(--font-size-60);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-60);
+            text-align: center;
+        }
+
+        .instructions-section-title {
+            font-size: var(--font-size-40);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-top: var(--space-80);
+            margin-bottom: var(--space-40);
+            padding-bottom: var(--space-20);
+            border-bottom: 2px solid var(--color-border-lighter);
+        }
+
+        .instructions-section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .instructions-subsection {
+            margin-bottom: var(--space-60);
+        }
+
+        .instructions-subsection-title {
+            font-size: var(--font-size-30);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-30);
+        }
+
+        .instructions-text {
+            color: var(--color-text);
+            margin-bottom: var(--space-40);
+            line-height: var(--line-height-30);
+        }
+
+        .instructions-code {
+            background: var(--color-background-body);
+            border: 1px solid var(--color-border-lighter);
+            border-radius: var(--border-radius);
+            padding: var(--space-30);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin-bottom: var(--space-40);
+            color: var(--color-text);
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: var(--space-40);
+        }
+
+        .instructions-list li {
+            padding: var(--space-30) 0;
+            border-bottom: 1px solid var(--color-border-lighter);
+        }
+
+        .instructions-list li:last-child {
+            border-bottom: none;
+        }
+
+        .param-name {
+            font-weight: 600;
+            color: var(--twilio-blue);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .param-required {
+            display: inline-block;
+            background: var(--twilio-red);
+            color: white;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: var(--space-20);
+        }
+
+        .param-optional {
+            display: inline-block;
+            background: var(--color-border);
+            color: white;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: var(--space-20);
+        }
+
+        .param-description {
+            color: var(--color-text);
+            margin-top: var(--space-20);
+            line-height: var(--line-height-20);
+        }
+
+        .scroll-hint {
+            text-align: center;
+            padding: var(--space-40);
+            color: var(--color-text-weak);
+            font-size: var(--font-size-20);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            .main-section {
+                padding: var(--space-30);
+            }
+
+            .card {
+                padding: var(--space-60);
+            }
+
+            .title {
+                font-size: var(--font-size-40);
+            }
+
+            .timer {
+                font-size: var(--font-size-60);
+            }
+
+            .instructions-section {
+                padding: var(--space-60) var(--space-30);
+            }
+
+            .instructions-card {
+                padding: var(--space-60);
+            }
+
+            .instructions-title {
+                font-size: var(--font-size-40);
+            }
+
+            .instructions-section-title {
+                font-size: var(--font-size-30);
+            }
+
+            .instructions-code {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Prevent tap highlight on mobile */
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Voice Client Section -->
+    <div class="main-section">
+        <div class="container">
+            <div class="card">
+                <div class="header">
+                    <img src="twilio.png" alt="Twilio" class="logo">
+                    <h1 class="title">Voice SDK Client</h1>
+                    <p class="subtitle">Powered by Twilio</p>
+                </div>
+
+                <div class="destination-container">
+                    <div class="destination-label">Destination</div>
+                    <div class="destination-value" id="destination">Loading...</div>
+                </div>
+
+                <div class="status-container">
+                    <div class="status-label">Status</div>
+                    <div class="status-value" id="status">Ready</div>
+                </div>
+
+                <div class="timer" id="timer"></div>
+
+                <button id="callButton" class="button button-primary">
+                    <span>Call</span>
+                </button>
+
+                <div class="button-group hidden" id="callControls">
+                    <button id="muteButton" class="button button-secondary">
+                        <span>Mute</span>
+                    </button>
+                    <button id="hangupButton" class="button button-destructive">
+                        <span>End Call</span>
+                    </button>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Hint -->
+    <div class="scroll-hint">
+        ↓ Scroll down for usage instructions ↓
+    </div>
+
+    <!-- Instructions Section -->
+    <div class="instructions-section">
+        <div class="instructions-container">
+            <div class="instructions-card">
+                <h2 class="instructions-title">Usage Instructions</h2>
+
+                <p class="instructions-text">
+                    The Voice SDK Client allows you to customize call destinations and behavior using URL parameters.
+                    Simply add parameters to the URL to configure where your calls should be routed.
+                </p>
+
+                <h3 class="instructions-section-title">Basic Usage</h3>
+                <p class="instructions-text">
+                    Open the voice client with custom parameters in your browser:
+                </p>
+                <div class="instructions-code">https://YOUR_DOMAIN_NAME/voice-client.html?parameter=value</div>
+
+                <h3 class="instructions-section-title">Routing Options</h3>
+
+                <div class="instructions-subsection">
+                    <h4 class="instructions-subsection-title">1. Route to TwiML App</h4>
+                    <p class="instructions-text">Route calls to a specific TwiML Application.</p>
+                    <div class="instructions-code">https://YOUR_DOMAIN_NAME/voice-client.html?twimlAppSid=APxxxxxxxxx</div>
+
+                    <ul class="instructions-list">
+                        <li>
+                            <div>
+                                <span class="param-name">twimlAppSid</span>
+                                <span class="param-required">Required</span>
+                            </div>
+                            <div class="param-description">TwiML Application SID to route the call to (starts with AP)</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="instructions-subsection">
+                    <h4 class="instructions-subsection-title">2. Connect to an AI Assistant</h4>
+                    <p class="instructions-text">Route calls to a Twilio AI Assistant with custom greetings and voices.</p>
+                    <div class="instructions-code">https://YOUR_DOMAIN_NAME/voice-client.html?assistantSid=ASxxxx&greeting=Hello!&voiceId=en-US-Journey-O</div>
+
+                    <ul class="instructions-list">
+                        <li>
+                            <div>
+                                <span class="param-name">assistantSid</span>
+                                <span class="param-required">Required</span>
+                            </div>
+                            <div class="param-description">Your AI Assistant SID (starts with AS)</div>
+                        </li>
+                        <li>
+                            <div>
+                                <span class="param-name">greeting</span>
+                                <span class="param-optional">Optional</span>
+                            </div>
+                            <div class="param-description">Custom greeting message for the AI Assistant</div>
+                        </li>
+                        <li>
+                            <div>
+                                <span class="param-name">voiceId</span>
+                                <span class="param-optional">Optional</span>
+                            </div>
+                            <div class="param-description">Voice ID for the assistant (e.g., en-US-Journey-O, en-US-Neural2-A)</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="instructions-subsection">
+                    <h4 class="instructions-subsection-title">3. Call a Phone Number</h4>
+                    <p class="instructions-text">Route calls to a phone number in E.164 format.</p>
+                    <div class="instructions-code">https://YOUR_DOMAIN_NAME/voice-client.html?destinationType=phone&phoneNumber=+15551234567</div>
+
+                    <ul class="instructions-list">
+                        <li>
+                            <div>
+                                <span class="param-name">destinationType</span>
+                                <span class="param-required">Required</span>
+                            </div>
+                            <div class="param-description">Set to "phone" to route to a phone number</div>
+                        </li>
+                        <li>
+                            <div>
+                                <span class="param-name">phoneNumber</span>
+                                <span class="param-required">Required</span>
+                            </div>
+                            <div class="param-description">Phone number to call in E.164 format (e.g., +15551234567)</div>
+                        </li>
+                    </ul>
+                    <p class="instructions-text" style="font-size: 0.875rem; color: var(--color-text-weak); margin-top: var(--space-30);">
+                        <strong>Note:</strong> Requires TWILIO_MOBILE_NUMBER configured in your environment for caller ID
+                    </p>
+                </div>
+
+                <div class="instructions-subsection">
+                    <h4 class="instructions-subsection-title">4. Route to Flex</h4>
+                    <p class="instructions-text">Route calls to a Twilio Flex workflow for agent handling.</p>
+                    <div class="instructions-code">https://YOUR_DOMAIN_NAME/voice-client.html?destinationType=flex</div>
+
+                    <ul class="instructions-list">
+                        <li>
+                            <div>
+                                <span class="param-name">destinationType</span>
+                                <span class="param-required">Required</span>
+                            </div>
+                            <div class="param-description">Set to "flex" to route to Flex workflow</div>
+                        </li>
+                    </ul>
+                    <p class="instructions-text" style="font-size: 0.875rem; color: var(--color-text-weak); margin-top: var(--space-30);">
+                        <strong>Note:</strong> Requires FLEX_WORKSPACE_SID and FLEX_WORKFLOW_SID configured in your environment
+                    </p>
+                </div>
+
+                <div class="instructions-subsection">
+                    <h4 class="instructions-subsection-title">5. Custom Routing</h4>
+                    <p class="instructions-text">Use custom TwiML logic defined in your backend.</p>
+                    <div class="instructions-code">https://YOUR_DOMAIN_NAME/voice-client.html?destinationType=custom</div>
+
+                    <ul class="instructions-list">
+                        <li>
+                            <div>
+                                <span class="param-name">destinationType</span>
+                                <span class="param-required">Required</span>
+                            </div>
+                            <div class="param-description">Set to "custom" to use custom TwiML routing logic</div>
+                        </li>
+                    </ul>
+                    <p class="instructions-text" style="font-size: 0.875rem; color: var(--color-text-weak); margin-top: var(--space-30);">
+                        <strong>Note:</strong> Extend the voice-sdk-call.protected.ts function to add custom TwiML logic
+                    </p>
+                </div>
+
+                <h3 class="instructions-section-title">Configuration</h3>
+                <p class="instructions-text">
+                    If no URL parameters are provided, the client will use the default routing configuration
+                    from your environment variables (.env file).
+                </p>
+                <p class="instructions-text">
+                    For more information about setup and configuration, see the README documentation in the project repository.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Twilio Voice SDK v2.x -->
+    <script type="text/javascript" src="twilio.min.js"></script>
+
+    <script>
+        // UI Elements
+        const statusEl = document.getElementById('status');
+        const destinationEl = document.getElementById('destination');
+        const timerEl = document.getElementById('timer');
+        const callButton = document.getElementById('callButton');
+        const callControls = document.getElementById('callControls');
+        const muteButton = document.getElementById('muteButton');
+        const hangupButton = document.getElementById('hangupButton');
+        const errorMessageEl = document.getElementById('errorMessage');
+
+        // State
+        let device = null;
+        let connection = null;
+        let callStartTime = null;
+        let timerInterval = null;
+        let callParams = {};
+        let accessToken = null;
+        let isDeviceInitializing = false;
+        let isDeviceReady = false;
+        let isMuted = false;
+
+        // Parse URL parameters
+        function parseUrlParameters() {
+            const params = new URLSearchParams(window.location.search);
+            const customParams = {};
+
+            // Extract all URL parameters to pass to the call
+            for (const [key, value] of params.entries()) {
+                customParams[key] = value;
+                console.log(`URL parameter: ${key} = ${value}`);
+            }
+
+            return customParams;
+        }
+
+        // Update destination display
+        function updateDestination(params) {
+            let destinationText = 'Not configured';
+
+            // Check for different destination types in priority order
+            if (params.assistantSid) {
+                destinationText = params.assistantSid;
+            } else if (params.phoneNumber) {
+                destinationText = params.phoneNumber;
+            } else if (params.twimlAppSid) {
+                destinationText = params.twimlAppSid;
+            } else if (params.destinationType === 'flex') {
+                destinationText = 'Flex';
+            } else if (params.destinationType === 'custom') {
+                destinationText = 'Custom';
+            } else if (params.destinationType === 'phone' && params.phoneNumber) {
+                destinationText = params.phoneNumber;
+            } else if (params.destinationType === 'assistant' && params.assistantSid) {
+                destinationText = params.assistantSid;
+            } else if (params.destinationType) {
+                destinationText = params.destinationType.charAt(0).toUpperCase() + params.destinationType.slice(1);
+            }
+
+            destinationEl.textContent = destinationText;
+            console.log('Destination set to:', destinationText);
+        }
+
+        // Fetch access token (on page load)
+        async function fetchToken() {
+            try {
+                updateStatus('Loading...', 'connecting');
+
+                // Build token URL with optional parameters
+                let tokenUrl = '/voice/voice-token';
+                const tokenParams = new URLSearchParams();
+
+                if (callParams.number) {
+                    tokenParams.append('number', callParams.number);
+                    console.log('Requesting token with number:', callParams.number);
+                }
+
+                if (callParams.twimlAppSid) {
+                    tokenParams.append('twimlAppSid', callParams.twimlAppSid);
+                    console.log('Requesting token with twimlAppSid:', callParams.twimlAppSid);
+                }
+
+                const queryString = tokenParams.toString();
+                if (queryString) {
+                    tokenUrl += '?' + queryString;
+                }
+
+                const tokenResponse = await fetch(tokenUrl);
+                if (!tokenResponse.ok) {
+                    throw new Error('Failed to fetch access token');
+                }
+
+                const { token, identity } = await tokenResponse.json();
+                console.log('Token received for identity:', identity);
+                accessToken = token;
+
+                updateStatus('Ready', '');
+                callButton.disabled = false;
+
+            } catch (error) {
+                console.error('Token fetch error:', error);
+                showError('Failed to fetch token: ' + error.message);
+                updateStatus('Error', 'error');
+            }
+        }
+
+        // Initialize Twilio Device (on first user gesture)
+        async function initializeDevice() {
+            if (isDeviceInitializing || isDeviceReady) {
+                return; // Already initializing or ready
+            }
+
+            try {
+                isDeviceInitializing = true;
+                updateStatus('Initializing Device...', 'connecting');
+                console.log('Initializing Twilio Device...');
+
+                if (!accessToken) {
+                    throw new Error('No access token available');
+                }
+
+                // Create Twilio Device
+                device = new Twilio.Device(accessToken, {
+                    codecPreferences: ['opus', 'pcmu'],
+                    fakeLocalDTMF: true,
+                    enableRingingState: true,
+                });
+
+                // Device event handlers
+                device.on('registered', () => {
+                    console.log('Device registered and ready');
+                    isDeviceReady = true;
+                    isDeviceInitializing = false;
+                    updateStatus('Ready', '');
+                });
+
+                device.on('error', (error) => {
+                    console.error('Device error:', error);
+                    showError('Device error: ' + error.message);
+                    updateStatus('Error', 'error');
+                    isDeviceInitializing = false;
+                });
+
+                device.on('connect', (conn) => {
+                    console.log('Call connected');
+                    connection = conn;
+                    updateStatus('Connected', 'connected');
+                    startTimer();
+                    showHangupButton();
+                });
+
+                device.on('disconnect', () => {
+                    console.log('Call disconnected');
+                    connection = null;
+                    updateStatus('Ready', '');
+                    stopTimer();
+                    showCallButton();
+                });
+
+                device.on('incoming', (conn) => {
+                    console.log('Incoming call (not expected for outbound-only client)');
+                    conn.reject();
+                });
+
+                // Register the device to receive calls and enable outbound
+                await device.register();
+
+            } catch (error) {
+                console.error('Device initialization error:', error);
+                showError('Failed to initialize device: ' + error.message);
+                updateStatus('Error', 'error');
+                isDeviceInitializing = false;
+                isDeviceReady = false;
+            }
+        }
+
+        // Make call
+        async function makeCall() {
+            try {
+                hideError();
+                callButton.disabled = true;
+
+                // Initialize device if not ready (first call)
+                if (!isDeviceReady) {
+                    console.log('Device not ready, initializing...');
+                    await initializeDevice();
+                }
+
+                if (!device || !isDeviceReady) {
+                    throw new Error('Device not ready');
+                }
+
+                updateStatus('Connecting...', 'connecting');
+
+                // Add spinner to button
+                callButton.innerHTML = '<div class="spinner"></div><span>Connecting...</span>';
+
+                // Make the call with URL parameters
+                // Voice SDK v2.x requires custom parameters wrapped in 'params' property
+                console.log('Making call with parameters:', callParams);
+                connection = await device.connect({
+                    params: callParams
+                });
+
+                // Handle connection-specific events
+                connection.on('accept', () => {
+                    console.log('Connection accepted');
+                    updateStatus('Connected', 'connected');
+                    startTimer();
+                    showHangupButton();
+                });
+
+                connection.on('disconnect', () => {
+                    console.log('Connection disconnected');
+                    connection = null;
+                    updateStatus('Ready', '');
+                    stopTimer();
+                    showCallButton();
+                });
+
+                connection.on('error', (error) => {
+                    console.error('Connection error:', error);
+                    showError('Call failed: ' + error.message);
+                    updateStatus('Error', 'error');
+                    showCallButton();
+                });
+
+            } catch (error) {
+                console.error('Make call error:', error);
+                showError('Failed to make call: ' + error.message);
+                updateStatus('Error', 'error');
+                showCallButton();
+            }
+        }
+
+        // Toggle mute
+        function toggleMute() {
+            try {
+                if (!connection) {
+                    throw new Error('No active connection');
+                }
+
+                isMuted = !isMuted;
+                connection.mute(isMuted);
+
+                if (isMuted) {
+                    muteButton.classList.add('muted');
+                    muteButton.innerHTML = '<span>Unmute</span>';
+                    console.log('Call muted');
+                } else {
+                    muteButton.classList.remove('muted');
+                    muteButton.innerHTML = '<span>Mute</span>';
+                    console.log('Call unmuted');
+                }
+            } catch (error) {
+                console.error('Mute toggle error:', error);
+                showError('Failed to toggle mute: ' + error.message);
+            }
+        }
+
+        // Hang up call
+        function hangUp() {
+            try {
+                if (connection) {
+                    connection.disconnect();
+                } else if (device) {
+                    device.disconnectAll();
+                }
+                // Reset mute state
+                isMuted = false;
+            } catch (error) {
+                console.error('Hang up error:', error);
+                showError('Failed to hang up: ' + error.message);
+            }
+        }
+
+        // Update status display
+        function updateStatus(text, className) {
+            statusEl.textContent = text;
+            statusEl.className = 'status-value' + (className ? ' ' + className : '');
+        }
+
+        // Timer functions
+        function startTimer() {
+            callStartTime = Date.now();
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            callStartTime = null;
+            timerEl.textContent = '';
+        }
+
+        function updateTimer() {
+            if (!callStartTime) return;
+
+            const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+
+            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Button visibility
+        function showCallButton() {
+            callButton.classList.remove('hidden');
+            callButton.disabled = false;
+            callButton.innerHTML = '<span>Call</span>';
+            callControls.classList.add('hidden');
+            // Reset mute button state
+            muteButton.classList.remove('muted');
+            muteButton.innerHTML = '<span>Mute</span>';
+        }
+
+        function showHangupButton() {
+            callButton.classList.add('hidden');
+            callControls.classList.remove('hidden');
+        }
+
+        // Error handling
+        function showError(message) {
+            errorMessageEl.textContent = message;
+            errorMessageEl.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessageEl.classList.remove('show');
+            errorMessageEl.textContent = '';
+        }
+
+        // Event listeners
+        callButton.addEventListener('click', makeCall);
+        muteButton.addEventListener('click', toggleMute);
+        hangupButton.addEventListener('click', hangUp);
+
+        // Initialize on page load (fetch token only, don't create Device yet)
+        window.addEventListener('load', () => {
+            callParams = parseUrlParameters();
+            updateDestination(callParams);
+            fetchToken();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (device) {
+                device.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
