@@ -136,6 +136,43 @@
             word-break: break-all;
         }
 
+        .destination-input {
+            width: 100%;
+            font-size: var(--font-size-20);
+            font-weight: 500;
+            color: var(--color-text);
+            padding: var(--space-30);
+            border: 2px solid var(--color-border-lighter);
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            background: var(--color-background-body);
+            transition: border-color 0.2s ease;
+        }
+
+        .destination-input:focus {
+            outline: none;
+            border-color: var(--twilio-blue);
+        }
+
+        .destination-input::placeholder {
+            color: var(--color-text-weak);
+        }
+
+        .destination-input.error {
+            border-color: var(--twilio-red);
+        }
+
+        .validation-error {
+            font-size: 0.75rem;
+            color: var(--twilio-red);
+            margin-top: var(--space-20);
+            display: none;
+        }
+
+        .validation-error.show {
+            display: block;
+        }
+
         .status-label {
             font-size: var(--font-size-20);
             color: var(--color-text-weak);
@@ -655,8 +692,15 @@
 
                 <h3 class="instructions-section-title">Configuration</h3>
                 <p class="instructions-text">
-                    If no URL parameters are provided, the client will use the default routing configuration
-                    from your environment variables (.env file).
+                    <strong>No URL Parameters:</strong> If you open the voice client without any URL parameters,
+                    you can enter a phone number directly in the input field. The number must be in E.164 format
+                    (e.g., +15551234567). You can also use formats like +1-555-123-4567 or +1 555 123 4567,
+                    which will be automatically cleaned for validation.
+                </p>
+                <p class="instructions-text">
+                    <strong>With URL Parameters:</strong> You can pre-configure the call destination using URL parameters
+                    as shown in the examples above. When URL parameters are provided, they will override the input field
+                    and display the configured destination as read-only.
                 </p>
                 <p class="instructions-text">
                     For more information about setup and configuration, see the README documentation in the project repository.
@@ -704,8 +748,74 @@
             return customParams;
         }
 
-        // Update destination display
+        // Validate E.164 phone number format
+        function validatePhoneNumber(phoneNumber) {
+            // E.164 format: optional +, then 1-15 digits, no spaces or special chars
+            // Must start with country code (1-9)
+            const e164Pattern = /^\+?[1-9]\d{1,14}$/;
+
+            // Remove all whitespace and dashes for validation
+            const cleanedNumber = phoneNumber.replace(/[\s\-()]/g, '');
+
+            if (!cleanedNumber) {
+                return { valid: false, message: 'Phone number is required' };
+            }
+
+            if (!e164Pattern.test(cleanedNumber)) {
+                return {
+                    valid: false,
+                    message: 'Enter a valid phone number in E.164 format (e.g., +15551234567)'
+                };
+            }
+
+            return { valid: true, cleanedNumber };
+        }
+
+        // Update destination display or create input field
         function updateDestination(params) {
+            const hasParams = Object.keys(params).length > 0;
+
+            if (!hasParams) {
+                // No URL parameters - show input field
+                destinationEl.innerHTML = `
+                    <input
+                        type="tel"
+                        id="phoneInput"
+                        class="destination-input"
+                        placeholder="+15551234567"
+                        autocomplete="tel"
+                    />
+                    <div id="validationError" class="validation-error"></div>
+                `;
+
+                // Add input event listener for real-time validation
+                const phoneInput = document.getElementById('phoneInput');
+                const validationError = document.getElementById('validationError');
+
+                phoneInput.addEventListener('input', (e) => {
+                    // Clear error on input
+                    phoneInput.classList.remove('error');
+                    validationError.classList.remove('show');
+                });
+
+                phoneInput.addEventListener('blur', (e) => {
+                    // Validate on blur
+                    const value = e.target.value.trim();
+                    if (value) {
+                        const validation = validatePhoneNumber(value);
+                        if (!validation.valid) {
+                            phoneInput.classList.add('error');
+                            validationError.textContent = validation.message;
+                            validationError.classList.add('show');
+                        }
+                    }
+                });
+
+                console.log('No URL parameters - showing phone input field');
+                return;
+            }
+
+            // URL parameters exist - show read-only destination (existing logic)
             let destinationText = 'Not configured';
 
             // Check for different destination types in priority order
@@ -848,6 +958,32 @@
         async function makeCall() {
             try {
                 hideError();
+
+                // Check if using input field (no URL parameters)
+                const phoneInput = document.getElementById('phoneInput');
+                if (phoneInput) {
+                    // Validate phone number from input
+                    const phoneNumber = phoneInput.value.trim();
+                    const validation = validatePhoneNumber(phoneNumber);
+
+                    if (!validation.valid) {
+                        phoneInput.classList.add('error');
+                        const validationError = document.getElementById('validationError');
+                        validationError.textContent = validation.message;
+                        validationError.classList.add('show');
+                        showError(validation.message);
+                        return;
+                    }
+
+                    // Set call parameters for phone call
+                    callParams = {
+                        destinationType: 'phone',
+                        phoneNumber: validation.cleanedNumber
+                    };
+
+                    console.log('Using phone number from input:', validation.cleanedNumber);
+                }
+
                 callButton.disabled = true;
 
                 // Initialize device if not ready (first call)

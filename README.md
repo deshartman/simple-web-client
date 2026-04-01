@@ -209,6 +209,98 @@ Browser Client          Voice Token Endpoint       Voice SDK Call Handler
      |<------- Call Connected ----|                            |
 ```
 
+## Regional Configuration
+
+### Understanding Twilio Regions
+
+Twilio operates data centers in multiple geographic regions. When you create Twilio resources (API Keys, TwiML Applications, etc.), they are associated with a specific region. For the Voice SDK to work correctly, **all components must be in the same region**.
+
+#### Available Regions
+
+- **US (default)** - United States (no region parameter needed)
+- **au1** - Australia (Sydney)
+- **ie1** - Ireland (Dublin)
+- **sg1** - Singapore
+- **jp1** - Japan (Tokyo)
+- **de1** - Germany (Frankfurt)
+- **br1** - Brazil (São Paulo)
+
+See [Twilio Regions Documentation](https://www.twilio.com/docs/global-infrastructure/edge-locations) for the complete list.
+
+### Regional Consistency Requirements
+
+⚠️ **Critical**: All of the following must be in the same region:
+
+1. **API Keys** (`TWILIO_API_KEY_SID` / `TWILIO_API_KEY_SECRET`)
+   - Created at: https://console.twilio.com/[REGION]/develop/runtime/api-keys/create
+   - Example for AU: https://console.twilio.com/au1/develop/runtime/api-keys/create
+
+2. **TwiML Application** (`VOICE_APP_SID`)
+   - Created at: https://console.twilio.com/[REGION]/develop/voice/manage/twiml-apps
+   - Example for AU: https://console.twilio.com/au1/develop/voice/manage/twiml-apps
+
+3. **Region Parameter** (`REGION` in `.env`)
+   - Must match the region where your API Keys and TwiML App were created
+   - Leave empty for US region (default)
+   - Set to `au1` for Australia, `ie1` for Ireland, etc.
+
+### Configuration Examples
+
+#### US Region (Default)
+```bash
+# .env
+TWILIO_API_KEY_SID=SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    # Created in US console
+TWILIO_API_KEY_SECRET=your_us_api_key_secret
+VOICE_APP_SID=APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        # Created in US console
+REGION=                                                  # Empty = US region
+```
+
+#### Australia Region
+```bash
+# .env
+TWILIO_API_KEY_SID=SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    # Created in AU console
+TWILIO_API_KEY_SECRET=your_au_api_key_secret
+VOICE_APP_SID=APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        # Created in AU console
+REGION=au1                                               # Set to au1
+```
+
+### Troubleshooting Regional Issues
+
+**Error: AccessTokenInvalid (20101)**
+- Symptom: "Twilio was unable to validate your Access Token"
+- Cause: Region mismatch between API keys and region parameter
+- Solution: Ensure `REGION` matches where your API keys were created, or leave empty for US
+
+**Error: UnknownError (31000) - No requests reaching backend**
+- Symptom: Device connects but call fails immediately with no backend logs
+- Cause: TwiML App in different region than API keys/region parameter
+- Solution: Recreate TwiML App in the same region as your API keys
+
+**How to identify your resource regions:**
+1. Check the console URL when viewing the resource
+   - US: `console.twilio.com/us1/...`
+   - AU: `console.twilio.com/au1/...`
+2. API Keys show region in the console list view
+3. TwiML Apps show region in their properties
+
+### Switching Regions
+
+To switch your application to a different region:
+
+1. Create new API Keys in the target region console
+2. Create a new TwiML Application in the target region
+3. Update your `.env` file:
+   ```bash
+   TWILIO_API_KEY_SID=SK...    # New API Key from target region
+   TWILIO_API_KEY_SECRET=...   # New API Key Secret
+   VOICE_APP_SID=AP...          # New TwiML App from target region
+   REGION=au1                   # Set to target region (or empty for US)
+   ```
+4. Redeploy: `npm run deploy`
+5. Update the TwiML App's Voice URL to point to your new deployment
+
+**Note**: You cannot reuse API Keys or TwiML Apps across regions. Each region requires its own resources.
+
 ## Configuration Reference
 
 ### Environment Variables
@@ -221,6 +313,7 @@ Browser Client          Voice Token Endpoint       Voice SDK Call Handler
 | `TWILIO_API_KEY_SID` | Yes | Twilio API Key SID for JWT generation |
 | `TWILIO_API_KEY_SECRET` | Yes | Twilio API Key Secret |
 | `VOICE_APP_SID` | Yes | TwiML Application SID |
+| `REGION` | No | Twilio region (leave empty for US, or "au1", "ie1", etc.) |
 | `VOICE_CLIENT_IDENTITY` | No | Client identity (default: "web-caller") |
 | `VOICE_SDK_DESTINATION_TYPE` | No | Default destination: "assistant", "phone", "flex", "custom" |
 | `VOICE_SDK_ASSISTANT_SID` | No | Default AI Assistant SID |

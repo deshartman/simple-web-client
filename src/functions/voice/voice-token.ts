@@ -17,6 +17,7 @@ type VoiceContext = MyContext & {
   TWILIO_API_KEY_SECRET?: string;
   VOICE_APP_SID?: string;
   VOICE_CLIENT_IDENTITY?: string;
+  REGION?: string;
 };
 
 export const handler: ServerlessFunctionSignature<VoiceContext, VoiceTokenEvent> =
@@ -70,15 +71,25 @@ export const handler: ServerlessFunctionSignature<VoiceContext, VoiceTokenEvent>
       const AccessToken = twilio.jwt.AccessToken;
       const VoiceGrant = AccessToken.VoiceGrant;
 
+      // Build token options with optional region
+      const tokenOptions: any = {
+        identity: identity,
+        ttl: 3600, // 1 hour
+      };
+
+      // Add region if specified in environment variables
+      if (context.REGION) {
+        tokenOptions.region = context.REGION;
+        console.log('Using region:', context.REGION);
+      } else {
+        console.log('No region specified, defaulting to US');
+      }
+
       const accessToken = new AccessToken(
         ACCOUNT_SID,
         TWILIO_API_KEY_SID,
         TWILIO_API_KEY_SECRET,
-        {
-          identity: identity,
-          ttl: 3600, // 1 hour
-          region: "au1",
-        }
+        tokenOptions
       );
 
       // Create Voice grant
