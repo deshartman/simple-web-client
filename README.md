@@ -17,6 +17,7 @@ A browser-based voice calling client powered by the Twilio Voice SDK, designed t
   - Safe area support for iPhone notches and Android gesture bars
   - Progressive enhancement for tablets and desktops
   - Accessibility-compliant zoom support
+- **QR Code for Mobile Testing** - Click the QR icon in the top-right corner to generate a scannable QR code, making it easy to open the app on mobile devices for testing
 
 ## Prerequisites
 

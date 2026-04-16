@@ -9,6 +9,9 @@
     <!-- Twilio Paste Theme via CDN -->
     <link rel="stylesheet" href="https://assets.twilio.com/public_assets/paste-fonts/main/1.5.0/fonts.css" />
 
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
         /* Twilio Paste Design Tokens */
         :root {
@@ -93,6 +96,18 @@
         .container {
             width: 100%;
             max-width: 400px;
+            perspective: 1000px;
+        }
+
+        .card-flipper {
+            position: relative;
+            width: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card-flipper.flipped {
+            transform: rotateY(180deg);
         }
 
         .card {
@@ -101,6 +116,127 @@
             box-shadow: var(--box-shadow);
             /* Mobile-first: compact padding */
             padding: var(--space-fluid-60);
+            position: relative;
+            backface-visibility: hidden;
+        }
+
+        .card-front, .card-back {
+            position: relative;
+            width: 100%;
+            backface-visibility: hidden;
+        }
+
+        .card-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transform: rotateY(180deg);
+            background: var(--color-background-body);
+            border-radius: var(--border-radius-20);
+            box-shadow: var(--box-shadow);
+            padding: var(--space-fluid-60);
+        }
+
+        .qr-toggle-button {
+            position: absolute;
+            top: var(--space-40);
+            right: var(--space-40);
+            width: 44px;
+            height: 44px;
+            background: var(--color-background);
+            border: 2px solid var(--color-border-lighter);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .qr-toggle-button:hover {
+            background: var(--color-border-lighter);
+            border-color: var(--color-border);
+        }
+
+        .qr-toggle-button:active {
+            transform: scale(0.95);
+        }
+
+        .qr-toggle-button svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--color-text);
+        }
+
+        .qr-container {
+            text-align: center;
+        }
+
+        .qr-title {
+            font-size: var(--font-size-fluid-60);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--space-40);
+        }
+
+        .qr-description {
+            font-size: var(--font-size-20);
+            color: var(--color-text-weak);
+            margin-bottom: var(--space-60);
+            line-height: var(--line-height-30);
+        }
+
+        .qr-code-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: var(--space-60);
+            padding: var(--space-40);
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        #qrcode {
+            display: inline-block;
+        }
+
+        #qrcode img,
+        #qrcode canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .qr-url {
+            font-size: var(--font-size-20);
+            color: var(--color-text-weak);
+            word-break: break-all;
+            margin-bottom: var(--space-40);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .back-button {
+            width: 100%;
+            padding: var(--space-50) var(--space-60);
+            min-height: var(--touch-target-min);
+            font-size: var(--font-size-fluid-30);
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: var(--twilio-blue);
+            color: white;
+        }
+
+        .back-button:hover {
+            background: #0D4FC2;
+        }
+
+        .back-button:active {
+            background: #0A3F9F;
         }
 
         .header {
@@ -606,39 +742,72 @@
     <!-- Main Voice Client Section -->
     <div class="main-section">
         <div class="container">
-            <div class="card">
-                <div class="header">
-                    <img src="twilio.png" alt="Twilio" class="logo">
-                    <h1 class="title">Voice SDK Client</h1>
-                    <p class="subtitle">Powered by Twilio</p>
-                </div>
-
-                <div class="destination-container">
-                    <div class="destination-label">Destination</div>
-                    <div class="destination-value" id="destination">Loading...</div>
-                </div>
-
-                <div class="status-container">
-                    <div class="status-label">Status</div>
-                    <div class="status-value" id="status">Ready</div>
-                </div>
-
-                <div class="timer" id="timer"></div>
-
-                <button id="callButton" class="button button-primary">
-                    <span>Call</span>
-                </button>
-
-                <div class="button-group hidden" id="callControls">
-                    <button id="muteButton" class="button button-secondary">
-                        <span>Mute</span>
+            <div class="card-flipper" id="cardFlipper">
+                <!-- Front Side: Voice Client -->
+                <div class="card card-front">
+                    <button class="qr-toggle-button" id="qrToggleButton" aria-label="Show QR Code" title="Show QR Code">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm-2 14h8v-8H3v8zm2-6h4v4H5v-4zm8-10v8h8V3h-8zm6 6h-4V5h4v4zm-6 4h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v2h-2v-2zm2-2h2v2h-2v-2zm0-4h2v2h-2v-2zm-4 0h2v2h-2v-2z"/>
+                        </svg>
                     </button>
-                    <button id="hangupButton" class="button button-destructive">
-                        <span>End Call</span>
+
+                    <div class="header">
+                        <img src="twilio.png" alt="Twilio" class="logo">
+                        <h1 class="title">Voice SDK Client</h1>
+                        <p class="subtitle">Powered by Twilio</p>
+                    </div>
+
+                    <div class="destination-container">
+                        <div class="destination-label">Destination</div>
+                        <div class="destination-value" id="destination">Loading...</div>
+                    </div>
+
+                    <div class="status-container">
+                        <div class="status-label">Status</div>
+                        <div class="status-value" id="status">Ready</div>
+                    </div>
+
+                    <div class="timer" id="timer"></div>
+
+                    <button id="callButton" class="button button-primary">
+                        <span>Call</span>
                     </button>
+
+                    <div class="button-group hidden" id="callControls">
+                        <button id="muteButton" class="button button-secondary">
+                            <span>Mute</span>
+                        </button>
+                        <button id="hangupButton" class="button button-destructive">
+                            <span>End Call</span>
+                        </button>
+                    </div>
+
+                    <div id="errorMessage" class="error-message"></div>
                 </div>
 
-                <div id="errorMessage" class="error-message"></div>
+                <!-- Back Side: QR Code -->
+                <div class="card card-back">
+                    <button class="qr-toggle-button" id="qrBackButton" aria-label="Back to Voice Client" title="Back to Voice Client">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                    </button>
+
+                    <div class="qr-container">
+                        <h2 class="qr-title">Scan to Open on Mobile</h2>
+                        <p class="qr-description">
+                            Scan this QR code with your mobile device to open the voice client and test the mobile-first design.
+                        </p>
+
+                        <div class="qr-code-wrapper">
+                            <div id="qrcode"></div>
+                        </div>
+
+                        <div class="qr-url" id="qrUrl"></div>
+
+                        <button class="back-button" id="backButton">Back to Voice Client</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1226,10 +1395,82 @@
             errorMessageEl.textContent = '';
         }
 
+        // QR Code functionality
+        let qrCodeGenerated = false;
+
+        function generateQRCode() {
+            if (qrCodeGenerated) {
+                return; // Already generated
+            }
+
+            const qrCodeContainer = document.getElementById('qrcode');
+            const qrUrlDisplay = document.getElementById('qrUrl');
+            const currentUrl = window.location.href;
+
+            // Clear any existing QR code
+            qrCodeContainer.innerHTML = '';
+
+            // Generate QR code
+            try {
+                new QRCode(qrCodeContainer, {
+                    text: currentUrl,
+                    width: 256,
+                    height: 256,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                // Display the URL
+                qrUrlDisplay.textContent = currentUrl;
+                qrCodeGenerated = true;
+
+                console.log('QR code generated for:', currentUrl);
+            } catch (error) {
+                console.error('QR code generation error:', error);
+                qrCodeContainer.innerHTML = '<p style="color: var(--twilio-red);">Failed to generate QR code</p>';
+            }
+        }
+
+        function flipCard() {
+            const cardFlipper = document.getElementById('cardFlipper');
+            cardFlipper.classList.add('flipped');
+
+            // Generate QR code when flipping for the first time
+            if (!qrCodeGenerated) {
+                // Small delay to ensure flip animation is visible
+                setTimeout(generateQRCode, 300);
+            }
+        }
+
+        function unflipCard() {
+            const cardFlipper = document.getElementById('cardFlipper');
+            cardFlipper.classList.remove('flipped');
+        }
+
         // Event listeners
         callButton.addEventListener('click', makeCall);
         muteButton.addEventListener('click', toggleMute);
         hangupButton.addEventListener('click', hangUp);
+
+        // QR toggle buttons
+        const qrToggleButton = document.getElementById('qrToggleButton');
+        const qrBackButton = document.getElementById('qrBackButton');
+        const backButton = document.getElementById('backButton');
+
+        qrToggleButton.addEventListener('click', flipCard);
+        qrBackButton.addEventListener('click', unflipCard);
+        backButton.addEventListener('click', unflipCard);
+
+        // Keyboard shortcut: ESC to flip back
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const cardFlipper = document.getElementById('cardFlipper');
+                if (cardFlipper.classList.contains('flipped')) {
+                    unflipCard();
+                }
+            }
+        });
 
         // Initialize on page load (fetch token only, don't create Device yet)
         window.addEventListener('load', () => {
