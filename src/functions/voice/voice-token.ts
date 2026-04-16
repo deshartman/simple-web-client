@@ -95,7 +95,7 @@ export const handler: ServerlessFunctionSignature<VoiceContext, VoiceTokenEvent>
       // Create Voice grant
       const voiceGrant = new VoiceGrant({
         outgoingApplicationSid: twimlAppSid,
-        incomingAllow: false, // Only allow outgoing calls
+        incomingAllow: true, // Allow both incoming and outgoing calls
       });
 
       accessToken.addGrant(voiceGrant);
