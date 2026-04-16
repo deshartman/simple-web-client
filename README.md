@@ -11,7 +11,12 @@ A browser-based voice calling client powered by the Twilio Voice SDK, designed t
 - **Built-in Usage Guide** - Interactive instructions available by scrolling down in the client interface
 - **Mute/Unmute Controls** - In-call audio controls
 - **Call Timer** - Track call duration in real-time
-- **Mobile Optimized** - Responsive design works on desktop and mobile devices
+- **Mobile-First Responsive Design** - Optimized for mobile devices with:
+  - Fluid typography that scales smoothly from 320px to 1024px+ screens
+  - Touch-friendly buttons (48px minimum) meeting WCAG accessibility guidelines
+  - Safe area support for iPhone notches and Android gesture bars
+  - Progressive enhancement for tablets and desktops
+  - Accessibility-compliant zoom support
 
 ## Prerequisites
 
@@ -89,11 +94,87 @@ npm run build
 
 ### 5. Run Locally
 
+#### Option A: Without ngrok (UI Testing Only)
+
 ```bash
 npm start
 ```
 
 The application will be available at `http://localhost:3000/voice-client.html`
+
+**Note:** This works for testing the UI/layout, but voice calls will fail because Twilio cannot reach your local server for webhooks.
+
+#### Option B: With ngrok (Full Functionality)
+
+For testing actual voice calls locally, you need to expose your local server via ngrok:
+
+**Using Twilio CLI with ngrok (Recommended):**
+
+1. Build the project:
+   ```bash
+   npm run build
+   ```
+
+2. Start the server with ngrok:
+   
+   **With custom subdomain (requires paid ngrok account):**
+   ```bash
+   twilio serverless:start --ngrok=your-subdomain.ngrok.dev
+   ```
+   
+   **With auto-generated subdomain (free ngrok):**
+   ```bash
+   twilio serverless:start --ngrok=""
+   ```
+
+   This automatically:
+   - Starts the server on port 3000
+   - Creates an ngrok tunnel
+   - Displays the public URL (e.g., `https://your-subdomain.ngrok.dev` or `https://xxxx-xxxx-xxxx.ngrok-free.app`)
+
+3. Copy the displayed ngrok URL and update your `.env` file:
+   ```bash
+   DOMAIN_NAME=https://your-subdomain.ngrok.dev
+   ```
+
+4. Restart the server to apply the new domain:
+   ```bash
+   twilio serverless:start --ngrok=your-subdomain.ngrok.dev
+   ```
+
+**Using `.twilioserverlessrc` (Persistent Configuration):**
+
+Alternatively, configure ngrok in `.twilioserverlessrc` to avoid typing the flag each time:
+```json
+{
+  "functionsFolder": "dist/functions",
+  "assetsFolder": "dist/assets",
+  "ngrok": "your-subdomain"  // Custom subdomain, or "" for auto-generated
+}
+```
+
+Then simply run:
+```bash
+npm run build
+twilio serverless:start
+```
+
+**Using ngrok directly:**
+
+```bash
+# Terminal 1: Start the server
+npm start
+
+# Terminal 2: Start ngrok
+ngrok http 3000
+```
+
+Then update `.env` with the ngrok URL and restart the server.
+
+**Important:** 
+- The ngrok URL changes each time unless you have a paid account with reserved domains
+- Update `DOMAIN_NAME` in `.env` whenever the ngrok URL changes
+- Restart the server after updating `DOMAIN_NAME` for the change to take effect
 
 ### 6. Deploy to Twilio
 
@@ -369,6 +450,26 @@ simple-web-client/
 - `npm run build` - Build TypeScript and copy assets to dist/
 - `npm start` - Build and run locally (auto-rebuild on changes)
 - `npm run deploy` - Build and deploy to Twilio
+
+### Twilio CLI Configuration
+
+The `.twilioserverlessrc` file configures how the Twilio CLI runs your serverless project:
+
+```json
+{
+  "functionsFolder": "dist/functions",  // Where compiled functions are located
+  "assetsFolder": "dist/assets",        // Where static assets are located
+  "ngrok": "your-subdomain",            // Optional: ngrok subdomain for local dev
+  "runtime": "node22"                   // Node.js runtime version
+}
+```
+
+**Key settings:**
+- `functionsFolder` and `assetsFolder` point to the compiled `dist/` directory
+- `ngrok` enables automatic ngrok tunneling with `twilio serverless:start`
+- Custom subdomain requires a paid ngrok account (use `ngrok: ""` for auto-generated URLs)
+
+This configuration ensures that `twilio serverless:start` works seamlessly without needing to specify folder paths in the command.
 
 ### Protected Functions
 

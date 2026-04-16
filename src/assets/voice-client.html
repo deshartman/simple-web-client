@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice SDK Client</title>
     <link rel="icon" type="image/png" href="twilio.png">
 
@@ -41,12 +41,28 @@
             --border-radius: 4px;
             --border-radius-20: 8px;
             --box-shadow: 0 1px 3px 0 rgba(18, 28, 45, 0.1);
+
+            /* Touch target minimum */
+            --touch-target-min: 48px;
+
+            /* Fluid typography using clamp() */
+            --font-size-fluid-20: clamp(0.8125rem, 0.75rem + 0.3125vw, 0.875rem);
+            --font-size-fluid-30: clamp(0.9375rem, 0.875rem + 0.3125vw, 1rem);
+            --font-size-fluid-40: clamp(1rem, 0.9375rem + 0.3125vw, 1.125rem);
+            --font-size-fluid-60: clamp(1.25rem, 1.125rem + 0.625vw, 1.5rem);
+            --font-size-fluid-80: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+
+            /* Fluid spacing */
+            --space-fluid-40: clamp(0.75rem, 0.625rem + 0.625vw, 1rem);
+            --space-fluid-60: clamp(1rem, 0.875rem + 0.625vw, 1.5rem);
+            --space-fluid-80: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
         }
 
         body {
@@ -57,6 +73,7 @@
             line-height: var(--line-height-30);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            -webkit-overflow-scrolling: touch;
             margin: 0;
             padding: 0;
         }
@@ -66,7 +83,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: var(--space-40);
+            /* Mobile-first: tighter padding with safe area support */
+            padding: max(var(--space-30), env(safe-area-inset-top))
+                     max(var(--space-30), env(safe-area-inset-right))
+                     max(var(--space-30), env(safe-area-inset-bottom))
+                     max(var(--space-30), env(safe-area-inset-left));
         }
 
         .container {
@@ -78,7 +99,8 @@
             background: var(--color-background-body);
             border-radius: var(--border-radius-20);
             box-shadow: var(--box-shadow);
-            padding: var(--space-80);
+            /* Mobile-first: compact padding */
+            padding: var(--space-fluid-60);
         }
 
         .header {
@@ -94,7 +116,8 @@
         }
 
         .title {
-            font-size: var(--font-size-60);
+            /* Use fluid typography */
+            font-size: var(--font-size-fluid-60);
             font-weight: 600;
             color: var(--color-text);
             margin-bottom: var(--space-20);
@@ -108,7 +131,8 @@
         .status-container {
             background: var(--color-background);
             border-radius: var(--border-radius);
-            padding: var(--space-50);
+            /* Increase padding for better mobile visibility */
+            padding: var(--space-fluid-60);
             margin-bottom: var(--space-60);
             text-align: center;
         }
@@ -122,7 +146,8 @@
         }
 
         .destination-label {
-            font-size: 0.75rem;
+            /* Larger for mobile visibility */
+            font-size: var(--font-size-fluid-20);
             color: var(--color-text-weak);
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -130,7 +155,8 @@
         }
 
         .destination-value {
-            font-size: var(--font-size-20);
+            /* Larger for mobile readability */
+            font-size: var(--font-size-fluid-30);
             font-weight: 500;
             color: var(--color-text);
             word-break: break-all;
@@ -138,10 +164,13 @@
 
         .destination-input {
             width: 100%;
-            font-size: var(--font-size-20);
+            /* Larger text for mobile typing */
+            font-size: var(--font-size-fluid-30);
             font-weight: 500;
             color: var(--color-text);
-            padding: var(--space-30);
+            /* Increased padding for easier touch input */
+            padding: var(--space-50);
+            min-height: var(--touch-target-min);
             border: 2px solid var(--color-border-lighter);
             border-radius: var(--border-radius);
             font-family: inherit;
@@ -174,7 +203,8 @@
         }
 
         .status-label {
-            font-size: var(--font-size-20);
+            /* Larger on mobile for readability */
+            font-size: var(--font-size-fluid-30);
             color: var(--color-text-weak);
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -182,7 +212,8 @@
         }
 
         .status-value {
-            font-size: var(--font-size-40);
+            /* Fluid sizing for visibility */
+            font-size: var(--font-size-fluid-40);
             font-weight: 600;
             color: var(--color-text);
         }
@@ -200,7 +231,8 @@
         }
 
         .timer {
-            font-size: var(--font-size-80);
+            /* Fluid timer sizing */
+            font-size: var(--font-size-fluid-80);
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             color: var(--color-text);
@@ -211,8 +243,10 @@
 
         .button {
             width: 100%;
-            padding: var(--space-50) var(--space-60);
-            font-size: var(--font-size-40);
+            /* Increased padding for 48px minimum touch target */
+            padding: var(--space-60) var(--space-60);
+            min-height: var(--touch-target-min);
+            font-size: var(--font-size-fluid-40);
             font-weight: 600;
             border: none;
             border-radius: var(--border-radius);
@@ -285,11 +319,14 @@
 
         .button-group {
             display: flex;
+            /* Mobile-first: stack vertically */
+            flex-direction: column;
             gap: var(--space-40);
             margin-top: var(--space-40);
         }
 
         .button-group .button {
+            /* Mobile: full width stacked buttons */
             flex: 1;
             margin-top: 0;
         }
@@ -333,7 +370,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: var(--space-80) var(--space-40);
+            /* Mobile-first: safe area padding */
+            padding: max(var(--space-60), env(safe-area-inset-top))
+                     max(var(--space-30), env(safe-area-inset-right))
+                     max(var(--space-60), env(safe-area-inset-bottom))
+                     max(var(--space-30), env(safe-area-inset-left));
             background: var(--color-background-body);
         }
 
@@ -346,11 +387,13 @@
             background: var(--color-background);
             border-radius: var(--border-radius-20);
             box-shadow: var(--box-shadow);
-            padding: var(--space-80);
+            /* Mobile-first: compact padding */
+            padding: var(--space-fluid-60);
         }
 
         .instructions-title {
-            font-size: var(--font-size-60);
+            /* Fluid sizing */
+            font-size: var(--font-size-fluid-60);
             font-weight: 600;
             color: var(--color-text);
             margin-bottom: var(--space-60);
@@ -358,7 +401,8 @@
         }
 
         .instructions-section-title {
-            font-size: var(--font-size-40);
+            /* Fluid sizing */
+            font-size: var(--font-size-fluid-40);
             font-weight: 600;
             color: var(--color-text);
             margin-top: var(--space-80);
@@ -394,8 +438,11 @@
             border-radius: var(--border-radius);
             padding: var(--space-30);
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
+            /* Readable on mobile, minimum 0.8125rem (13px) */
+            font-size: clamp(0.8125rem, 0.75rem + 0.3125vw, 0.875rem);
             overflow-x: auto;
+            /* Smooth scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
             margin-bottom: var(--space-40);
             color: var(--color-text);
         }
@@ -470,47 +517,87 @@
             }
         }
 
-        /* Mobile optimizations */
-        @media (max-width: 480px) {
+        /* Extra small devices: older phones, iPhone SE */
+        @media (min-width: 360px) {
+            .container {
+                max-width: 360px;
+            }
+        }
+
+        /* Small devices: modern phones in portrait */
+        @media (min-width: 480px) {
+            .container {
+                max-width: 400px;
+            }
+
+            /* Horizontal button layout on wider phones */
+            .button-group {
+                flex-direction: row;
+            }
+
+            .instructions-container {
+                max-width: 480px;
+            }
+        }
+
+        /* Medium devices: tablets and phones in landscape */
+        @media (min-width: 768px) {
             .main-section {
-                padding: var(--space-30);
+                padding: var(--space-60);
             }
 
             .card {
-                padding: var(--space-60);
-            }
-
-            .title {
-                font-size: var(--font-size-40);
-            }
-
-            .timer {
-                font-size: var(--font-size-60);
+                padding: var(--space-80);
             }
 
             .instructions-section {
-                padding: var(--space-60) var(--space-30);
+                padding: var(--space-80) var(--space-60);
             }
 
             .instructions-card {
-                padding: var(--space-60);
+                padding: var(--space-80);
             }
 
-            .instructions-title {
-                font-size: var(--font-size-40);
+            .instructions-container {
+                max-width: 700px;
+            }
+        }
+
+        /* Large devices: desktops */
+        @media (min-width: 1024px) {
+            .instructions-container {
+                max-width: 800px;
+            }
+        }
+
+        /* Landscape orientation: reduce vertical spacing */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .main-section {
+                padding: var(--space-20);
+                min-height: auto;
             }
 
-            .instructions-section-title {
-                font-size: var(--font-size-30);
+            .card {
+                padding: var(--space-40);
             }
 
-            .instructions-code {
-                font-size: 0.75rem;
+            .header {
+                margin-bottom: var(--space-40);
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .timer {
+                margin: var(--space-40) 0;
+                font-size: var(--font-size-60);
             }
         }
 
         /* Prevent tap highlight on mobile */
-        button {
+        button, input {
             -webkit-tap-highlight-color: transparent;
         }
     </style>
