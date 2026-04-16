@@ -4,7 +4,8 @@ A browser-based voice calling client powered by the Twilio Voice SDK, designed t
 
 ## Features
 
-- **Browser-Based Calling** - Make voice calls directly from a web browser using Twilio Voice SDK
+- **Bidirectional Calling** - Make and receive voice calls directly from a web browser using Twilio Voice SDK
+- **Incoming Call UI** - Beautiful modal interface with accept/reject buttons for incoming calls
 - **AI Assistant Integration** - Connect calls to Twilio AI Assistants with customizable greetings and voices
 - **Flexible Routing** - Route calls to AI Assistants, phone numbers, Flex workflows, or custom TwiML
 - **URL Parameter Configuration** - Customize call destinations and behavior via URL parameters
@@ -192,6 +193,44 @@ After deployment:
    npm run deploy
    ```
 
+### 7. Configure Incoming Calls (Optional)
+
+To enable incoming calls to your web client:
+
+#### Step 1: Deploy the Code
+Ensure you've deployed your code using `npm run deploy` (step 6 above).
+
+#### Step 2: Configure a Phone Number for Incoming Calls
+
+1. Go to [Phone Numbers → Manage → Active Numbers](https://console.twilio.com/us1/develop/phone-numbers/manage/incoming)
+2. Select the phone number you want to use for incoming calls
+3. Scroll to **Voice Configuration**
+4. Under "A CALL COMES IN":
+   - Select **Function**
+   - Choose `/voice-incoming` from the dropdown
+   - HTTP Method: `POST`
+5. Click **Save**
+
+#### Step 3: Test Incoming Calls
+
+1. Open your deployed web client: `https://YOUR_DOMAIN_NAME/voice-client.html`
+2. Wait for the status to show "Ready"
+3. Call your configured Twilio phone number from any phone
+4. The web client will display an incoming call modal with:
+   - The caller's phone number
+   - **Accept** button (green) to answer the call
+   - **Reject** button (red) to decline the call
+
+#### How It Works
+
+The `/voice-incoming` function:
+- Automatically routes incoming calls to your web client
+- Uses the `VOICE_CLIENT_IDENTITY` from your environment (defaults to `"web-caller"`)
+- Generates TwiML: `<Dial><Client>web-caller</Client></Dial>`
+- Logs caller information for debugging
+
+**Important:** The client identity in the function must match the identity in your access token. By default, both use `"web-caller"`. If you change `VOICE_CLIENT_IDENTITY` in your `.env`, redeploy for changes to take effect.
+
 ## Using the Voice Client
 
 ### Basic Usage
@@ -256,16 +295,19 @@ You can extend the `voice-sdk-call.protected.ts` function to add custom TwiML lo
   - Fetches JWT access token from backend
   - Initializes Twilio Voice SDK Device
   - Makes outbound calls with URL parameters
+  - Receives incoming calls with modal UI (accept/reject)
   - Provides mute/unmute controls and call timer
+  - QR code feature for easy mobile device testing
   - Includes scrollable usage instructions with parameter documentation
 
 #### Backend Functions
 - **voice-token.ts** - Generates JWT access tokens for Voice SDK authentication
   - Creates Twilio Access Token with Voice Grant
-  - Assigns client identity
+  - Assigns client identity (defaults to `"web-caller"`)
+  - Enables both incoming and outgoing calls (`incomingAllow: true`)
   - Returns token to browser client
 
-- **voice-sdk-call.protected.ts** - Routes voice calls based on parameters
+- **voice-sdk-call.protected.ts** - Routes outbound voice calls based on parameters
   - Receives call parameters from Voice SDK
   - Generates appropriate TwiML response:
     - `<Connect><Assistant>` for AI Assistant calls
@@ -274,8 +316,15 @@ You can extend the `voice-sdk-call.protected.ts` function to add custom TwiML lo
     - Custom TwiML for custom routing
   - Returns TwiML to connect the call
 
+- **voice-incoming.ts** - Routes incoming calls to the web client
+  - Webhook for Twilio phone numbers
+  - Generates TwiML: `<Dial><Client>web-caller</Client></Dial>`
+  - Routes calls to web client based on `VOICE_CLIENT_IDENTITY`
+  - Logs caller information for debugging
+
 ### Call Flow
 
+#### Outbound Call Flow
 ```
 Browser Client          Voice Token Endpoint       Voice SDK Call Handler
      |                           |                            |
@@ -289,6 +338,19 @@ Browser Client          Voice Token Endpoint       Voice SDK Call Handler
      |                           |                            |
      |                           |<---- TwiML Response -------|
      |<------- Call Connected ----|                            |
+```
+
+#### Incoming Call Flow
+```
+Phone Number         Voice Incoming Handler      Browser Client
+     |                         |                        |
+     |--- Incoming Call ------>|                        |
+     |                         |                        |
+     |                         |-- TwiML: Dial Client ->|
+     |                         |                        |
+     |                         |              [Modal: Accept/Reject]
+     |                         |                        |
+     |<-------------- If Accepted: Call Connected ------|
 ```
 
 ## Regional Configuration
@@ -434,7 +496,8 @@ simple-web-client/
 │   ├── functions/
 │   │   └── voice/
 │   │       ├── voice-token.ts                # JWT token generation
-│   │       └── voice-sdk-call.protected.ts   # Call routing handler
+│   │       ├── voice-sdk-call.protected.ts   # Outbound call routing handler
+│   │       └── voice-incoming.ts             # Incoming call webhook
 │   └── types/
 │       ├── twilio.d.ts            # TypeScript type definitions
 │       ├── events.d.ts
